@@ -17,7 +17,7 @@ def Canny(oimg):
   return edges
 
 
-pickle_out = open("weightsfinal.pickle","rb")
+pickle_out = open("weightsmix.pickle","rb")
 allT = pickle.load(pickle_out)
 pickle_out.close()
 
