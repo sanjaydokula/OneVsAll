@@ -4,22 +4,27 @@ from scipy.optimize import fmin_cg
 import math
 import pickle
 import cv2
+import matplotlib.pyplot as plt
 
 
+J_hist = [[0 for j in range(1)] for i in range(10)]# J_hist = np.array(J_hist)
+print(J_hist)
+print(len(J_hist))
+print(len(J_hist[0]))
 # ============================= settings ===========================
 
-kernel = np.ones((5,5),np.uint8)
-lamda = 1.13
+# kernel = np.ones((5,5),np.uint8)
+lamda = 1
 numOfLabels = 10
 
 
 # ====================== pre-processing funtions=================
 
 
-def Canny(oimg):
-  img = oimg
-  edges = cv2.Canny(img,60,180)
-  return edges
+# def Canny(oimg):
+#   img = oimg
+#   edges = cv2.Canny(img,60,180)
+#   return edges
 # ==================================================================
 
 #======================= helper functions ======================
@@ -36,7 +41,7 @@ def hypo(X,theta):
 
 # cost function
 
-def Cost(theta,X,y,lamda):
+def Cost(theta,X,y,lamda,i):
   m = X.shape[0]
   y1 = y.dot(np.log(hypo(X,theta)))
   y0 = (1-y).dot(np.log(1-hypo(X,theta)))
@@ -44,12 +49,17 @@ def Cost(theta,X,y,lamda):
   temp[0] = 0
   reg_term = (lamda/(2 * m)) *  (temp.dot(temp))
   J = (-1/m) * (y1+y0) + reg_term
+  print("cost-->",J)
+  global J_hist
+  # print(J_hist.shape)
+  # J_hist = np.append(J_hist[i],[J])
+  J_hist[i].append(J)
   return J
 
 
 # gradient(1st derivative of loss function)
 
-def Fprime(theta,X,y,lamda):
+def Fprime(theta,X,y,lamda,i):
   m = X.shape[0]
   ht = hypo(X,theta)
   reg_term = (lamda/m) * theta
@@ -67,7 +77,7 @@ def OneVsAll(X,y,lamda, numOfLabels):
   X = np.c_[np.ones((m,1)), X]
   for i in range(0,numOfLabels):
     initTheta = np.zeros((n+1,1))
-    theta = fmin_cg(f=Cost, x0=initTheta, fprime=Fprime, args=(X, y==i, lamda), maxiter=50)
+    theta = fmin_cg(f=Cost, x0=initTheta, fprime=Fprime, args=(X, y==i, lamda,i), maxiter=50)
     allTheta[i,:] = theta
   return allTheta
 
@@ -82,7 +92,7 @@ def predict_one_vs_all(all_theta, X):
 
 
 
-data = np.loadtxt("firstDataset.csv",delimiter=',')
+data = np.loadtxt("image6.csv",delimiter=',')
 
 dm,dn = data.shape
 
@@ -121,6 +131,16 @@ pred = predict_one_vs_all(allT, Xt)
 
 print('Training Set Accuracy: {}'.format(np.mean((pred == yt)) * 100))
 
-pickle_in  = open("weightsfinal.pickle","wb")
-pickle.dump(allT,pickle_in)
-pickle_in.close()
+names = ["class 0","class 1","class 2","class 3","class 4","class 5","class 6","class 7","class 8","class 9"]
+font1 = {'family':'serif','color':'blue','size':20}
+font2 = {'family':'serif','color':'darkred','size':15}
+for i in range(1,11):
+  plt.subplot(2,5,i)
+  plt.xlabel("iterations",fontdict=font2)
+  plt.ylabel("cost",fontdict=font2)
+  plt.plot(J_hist[i-1])
+  plt.title(names[i-1],fontdict=font1)
+plt.show()
+# pickle_in  = open("weightsfinal.pickle","wb")
+# pickle.dump(allT,pickle_in)
+# pickle_in.close()

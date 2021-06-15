@@ -26,6 +26,11 @@ cap = cv2.VideoCapture(0)
 dim = (20,20)
 
 kernel = np.ones((5,5),np.uint8)
+font = cv2.FONT_HERSHEY_SIMPLEX
+org = (50, 50)
+fontScale = 1
+color = (255, 0, 0)
+thickness = 2
 
 while(cap.read()):
     sucs, frame = cap.read()
@@ -37,9 +42,7 @@ while(cap.read()):
     dframe = cv2.dilate(cframe,kernel,iterations = 1)
     dframe = dframe/255
 
-    
-    cv2.imshow("dframe",dframe)
-
+    fframe = dframe
     dframe = cv2.resize(dframe, dim, interpolation=cv2.INTER_AREA)
     dframe = np.array(dframe)
     dframe = dframe.reshape((1,400))
@@ -48,6 +51,9 @@ while(cap.read()):
     pred = hypo(dframe,allT.T)
     first = np.argmax(pred,axis=1)
     print(first)
+    fframe = cv2.putText(fframe, str(first), org, font, 
+                   fontScale, color, thickness, cv2.LINE_AA)
+    cv2.imshow("dframe",fframe)
     time.sleep(.2)
     if cv2.waitKey(1) & 0xFF ==ord('q'):
         break
